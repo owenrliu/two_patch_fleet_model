@@ -234,7 +234,7 @@ ssb <- function(w.vec,n.vec,mature.vec) sum(w.vec*n.vec*mature.vec)
 ```
 
 #### Fisheries Yield
-Yield at each time step will be equal to the exploitation fraction(the proportion of fishing mortality relative to total mortality), times the overall survival rate, times weight-at-age and numbers-at-age, and summed over all age classes. 
+Yield at each time step will be equal to the exploitation fraction (the proportion of fishing mortality relative to total mortality), times the overall survival rate, times weight-at-age and numbers-at-age, and summed over all age classes. 
 
 $$Y = \sum_{i=1}^{\omega}F_{rel,i}w_in_i$$
 
@@ -298,9 +298,9 @@ In this model formulation, the long-term growth or decline is determined by $R$ 
 
 ### Simulations for Local Population
 
-To start, we can explore the behavior of these models by simulating a virtual population, described by the parameters above, and look at patterns over time in age sructure and population dynamics.  First, we can write a general simulation function, and apply it to the density independent local population.
+To start, we can explore the behavior of these models by simulating a virtual population, described by the parameters above, and look at patterns over time in age structure and population dynamics.  First, we can write a general simulation function, and apply it to the density independent local population.
 
-We can sample $a\in(0,1)$ from a skewed beta distribution, Beta$(\alpha,\beta)$, since in most years it will be very small.  $\xi$, the external larval supply, is sampled from a lognormal distribution.  The cv of both $a$ and $\xi$ are the same, cv=0.5.
+We can sample $a\in(0,1)$ from a skewed beta distribution, Beta$(\alpha,\beta)$, since in most years it will be very small.  $\xi$, the external larval supply, is sampled from a lognormal distribution (both following Armsworth 2002).  The cv of both $a$ and $\xi$ are the same, cv=0.5.
 
 One more source of randomization: Every year of the simulation, all demographic parameters are subject to a $\pm$ 12.5% fluctuation. This randomization applies to survival vector $\textbf{p}$, larval survival $\gamma$, and fecundity vector $\textbf{f}$
 
@@ -415,7 +415,7 @@ simtestplot<-ggplot(melt(simtest[['Radj']]),aes(x=101:200,y=value)) +geom_line()
 simtestplot +geom_hline(aes(yintercept=mean(value)))
 ```
 
-We can start to test the sensitivity of outputs to variation in input parameters.
+We can start to test the sensitivity of outputs to variation in input parameters. First, to self-recruitment rate *a*:
 
 ```{r a sensitivity, echo=FALSE}
 a.sens <- seq(.0001,.0017,length=50)
@@ -462,7 +462,7 @@ ext.tot.plot<-ggplot(extsens.data,aes(x=ext.sens,y=extsens.tot)) + geom_point() 
 multiplot(ext.cv.plot,ext.eigen.plot,ext.Radj.plot,ext.tot.plot,cols=2)
 ```
 
-Fishing has been zero. What is the effect of adding (static, for now) fishing mortality? Here we test sensitivity to fishing intensity, from 0 to 3.  For now, selectivity is constant, so fishing intensity is analagous to fishing mortality F.  Here, too, we get fisheries yield (when previously it was zero).
+Fishing has been zero. What is the effect of adding (static, for now) fishing mortality? Here we test sensitivity to fishing intensity, from 0 to 1.  For now, selectivity is constant, so fishing intensity is analagous to fishing mortality F.  Here, too, we get fisheries yield (when previously it was zero).
 
 ```{r fishing sensitivity, echo=FALSE}
 fish.sens <- seq(0,1,length=50)
@@ -490,7 +490,7 @@ fish.yield.plot
 ```
 
 ## Two separate, interacting populations
-Next, we set up two populations that interact through larval and adult movement, but they can have separate demographic rates (growth, natural mortality, larval survival, length-weight relationship, etc.) and can be subject to different fishing pressures.  Basically, the model formulation allows for separate parameter values for most of the parameters used in the single-populatin example above, while also adding larval and adult movement. Default demographic and fishing parameters are identical between populations. The metapopulation formulation requires an $\omega$ x $\omega$ square matrix $\textbf{Q}$ describing connectivity.  If $a_{ij}^{\omega}$ is the proportion of age class $\omega$ produced by population $j$ that move to local population $i$, then $^{ij}\textbf{Q}$ is the square matrix with top line $a_{ij} ^{i}\gamma(^{j}f_{1},...,^{j}f_{\omega})$ , allowing larvae from produced in population $j$ to affect population $i$, and other rows either zero (for no adult movement) or containing proportional movement of individuals of other age classes from $j$ to $i$.  Following Armsworth (2002) and Caswell (2001).
+Next, we set up two populations that interact through larval and adult movement, but they can have separate demographic rates (growth, natural mortality, larval survival, length-weight relationship, etc.) and can be subject to different fishing pressures.  Basically, the model formulation allows for separate parameter values for most of the parameters used in the single-population example above, while also adding larval and adult movement. Default demographic and fishing parameters are identical between populations. The metapopulation formulation requires an $\omega$ x $\omega$ square matrix $\textbf{Q}$ describing connectivity.  If $a_{ij}^{\omega}$ is the proportion of age class $\omega$ produced by population $j$ that move to local population $i$, then $^{ij}\textbf{Q}$ is the square matrix with top line $a_{ij} ^{i}\gamma(^{j}f_{1},...,^{j}f_{\omega})$ , allowing larvae from produced in population $j$ to affect population $i$, and other rows either zero (for no adult movement) or containing proportional movement of individuals of other age classes from $j$ to $i$.  Following Armsworth (2002) and Caswell (2001).
 
 Random environmental fluctuation in recruitment (self-recruitment rate) can also be parameterized separately.  There is no more external larvae ($\xi$) term, since the 2 patches are assumed to contain the entire population, and hence the population is demographically 'closed' at the metapopulation level.
 
@@ -512,7 +512,7 @@ Q.fxn <- function (max.age,larvala, adulta, gamma, fert.vec,p.vec) {
 
 ## 2 population simulation function
 ## Calls all the parts we've coded so far
-sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766, surv.1=0.863, mort.1=1-0.863, repr.age.1=2, gamma.1=0.125,fert1.1=0.0129,fert2.1=3.03, fish.1=0, L50.1=25,L95.1=40, lw.a.1=0.0105, lw.b.1=3.11, a.mu.1=0.001,a.cv.1=0.5,Linf.2=52.2,K.2=0.354,t0.2 = -0.766, surv.2=0.863, mort.2=1-0.863, repr.age.2=2, gamma.2=0.125,fert1.2=0.0129,fert2.2=3.03, fish.2=0, L50.2=25,L95.2=40, lw.a.2=0.0105, lw.b.2=3.11, a.mu.2=0.001,a.cv.2=0.5, larvala.mu.1=0,larvala.cv.1=0.5,adulta.mu.1=0,adulta.cv.1=0.5,larvala.mu.2=0,larvala.cv.2=0.5,adulta.mu.2=0,adulta.cv.2=0.5) {
+sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766, surv.1=0.863, mort.1=1-0.863, repr.age.1=2, gamma.1=0.125,fert1.1=0.0129,fert2.1=3.03, fish.1=0, L50.1=25,L95.1=40, lw.a.1=0.0105, lw.b.1=3.11, a.mu.1=0.001,a.cv.1=0.5,Linf.2=52.2,K.2=0.354,t0.2 = -0.766, surv.2=0.863, mort.2=1-0.863, repr.age.2=2, gamma.2=0.125,fert1.2=0.0129,fert2.2=3.03, fish.2=0, L50.2=25,L95.2=40, lw.a.2=0.0105, lw.b.2=3.11, a.mu.2=0.001,a.cv.2=0.5, larvala.mu.1=0.0005,larvala.cv.1=0.5,adulta.mu.1=0,adulta.cv.1=0.5,larvala.mu.2=0.0005,larvala.cv.2=0.5,adulta.mu.2=0,adulta.cv.2=0.5) {
   
   ### First population
   ## age vector
@@ -723,11 +723,11 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
 ```
 
 ### Simulations for Two Population Model
-Let's run the simulation and make sure it works.  This chunk can be run multiple times to manually explore the behavior of the model.
+Let's run the simulation and make sure it works.  This chunk can be run multiple times to manually explore the behavior of the model.  Keep in mind that there are default values for all parameters in the model, so the parameter specifications below are only required if the user is altering default values, 'all else being equal'.
 
 ```{r two pop simulation}
 ptm <- proc.time() # for timing the simulation
-sim2test <- sim.2pops(a.mu.1=0.0014,a.mu.2=0.0008,larvala.mu.1=.002,adulta.mu.1=0.01,fish.1=0.2,fish.2=0)
+sim2test <- sim.2pops(K.1=0.5,fish.1=0.1,fish.2=0.05)
 #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)
 sim2Radj1.plot<-ggplot(melt(sim2test[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
 sim2Radj2.plot<-ggplot(melt(sim2test[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')
