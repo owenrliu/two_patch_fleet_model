@@ -462,6 +462,39 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
 }
 
 #### Plotting the outputs from the simulation ####
+## Requires a few different plot layouts, etc. to fit the form of the app ##
+plotRadj <- function(dat) {
+  Radj1.plot<-ggplot(melt(dat[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
+  Radj2.plot<-ggplot(melt(dat[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')
+  multiplot(Radj1.plot,Radj2.plot)
+}
+ploteigens <- function(dat) {
+  eigens1.plot<-ggplot(melt(dat[[1]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
+  eigens2.plot<-ggplot(melt(dat[[2]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 2, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
+  multiplot(eigens1.plot,eigens2.plot)
+}
+plotyield <-function(dat) {
+  Yield1.plot<-ggplot(melt(dat[[1]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Yield') +xlab('time')+ylab('Yield')
+  Yield2.plot<-ggplot(melt(dat[[2]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Yield') +xlab('time')+ylab('Yield')
+  multiplot(Yield1.plot,Yield2.plot)
+}
+plotabun <- function(dat) {
+  pop1.plot<-ggplot(melt(dat[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('abundance')
+  pop2.plot<-ggplot(melt(dat[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('abundance')
+  multiplot(pop1.plot,pop2.plot)
+}
+plottotpop <- function(dat) {
+  eigen<-ggplot(melt(dat[[3]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red')) +ggtitle('Entire Population, Eigen Values') +xlab('time')+ylab('Dominant Eigen Value')
+  yield<-ggplot(melt(dat[[3]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Yield') +xlab('time')+ylab('Yield')
+  abun<-ggplot(melt(dat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
+  multiplot(eigen,yield,abun,layout=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
+}
+plotparams<-function(vec) {
+  age.vec<-0:(length(vec)-1)
+  df<-data.frame(testvec=vec,age=age.vec)
+  df_molten<-melt(df,id.vars='age')
+  ggplot(df_molten) + geom_line(aes(x=age,y=value))
+}
 two_pop_sim_plots <- function(params.list) {
   sim2test <- do.call(sim.2pops,params.list)
   #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)
