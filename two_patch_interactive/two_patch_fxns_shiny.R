@@ -246,9 +246,9 @@ Q.fxn <- function (max.age,larvala, adulta, gamma, fert.vec,p.vec) {
 }
 
 #### Two-patch simulation function ####
-sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766, surv.1=0.863, mort.1=1-0.863, 
+sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766, surv.1=0.863, mort.1=1-0.863, 
                       repr.age.1=2, gamma.1=0.125,fert1.1=0.0129,fert2.1=3.03, fish.1=0, L50.1=25,L95.1=40, 
-                      lw.a.1=0.0105, lw.b.1=3.11, a.mu.1=0.001,a.cv.1=0.5,Linf.2=52.2,K.2=0.354,t0.2 = -0.766, 
+                      lw.a.1=0.0105, lw.b.1=3.11, a.mu.1=0.001,a.cv.1=0.5,max.age.2=14,Linf.2=52.2,K.2=0.354,t0.2 = -0.766, 
                       surv.2=0.863, mort.2=1-0.863, repr.age.2=2, gamma.2=0.125,fert1.2=0.0129,fert2.2=3.03, 
                       fish.2=0, L50.2=25,L95.2=40, lw.a.2=0.0105, lw.b.2=3.11, a.mu.2=0.001,a.cv.2=0.5, 
                       larvala.mu.1=0.0005,larvala.cv.1=0.5,adulta.mu.1=0,adulta.cv.1=0.5,larvala.mu.2=0.0005,
@@ -256,7 +256,7 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   
   ### First population
   ## age vector
-  age.vec <- 0:max.age
+  age.vec <- 0:max.age.1
   
   ## lengths vector
   vb.1 <- c(Linf.1,K.1,t0.1)
@@ -291,7 +291,7 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   
   ### Second population
   ## age vector
-  age.vec <- 0:max.age
+  age.vec <- 0:max.age.2
   
   ## lengths vector
   vb.2 <- c(Linf.2,K.2,t0.2)
@@ -489,31 +489,57 @@ plottotpop <- function(dat) {
   abun<-ggplot(melt(dat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
   multiplot(eigen,yield,abun,layout=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
 }
-plotparams<-function(vec) {
+plotparams<-function(vec,type) {
   age.vec<-0:(length(vec)-1)
   df<-data.frame(testvec=vec,age=age.vec)
   df_molten<-melt(df,id.vars='age')
-  ggplot(df_molten) + geom_line(aes(x=age,y=value))
+  title <- paste0("Age vs. ",type)
+  laby <- type
+  ggplot(df_molten) + geom_line(aes(x=age,y=value)) + labs(title=title,x="Age",y=laby)
 }
-two_pop_sim_plots <- function(params.list) {
-  sim2test <- do.call(sim.2pops,params.list)
+two_pop_sim_plots <- function(simdat,type) {
   #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)
-  sim2Radj1.plot<-ggplot(melt(sim2test[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
-  sim2Radj2.plot<-ggplot(melt(sim2test[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')
-  multiplot(sim2Radj1.plot,sim2Radj2.plot)
+  sim2Radj1.plot<-ggplot(melt(simdat[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
+  sim2Radj2.plot<-ggplot(melt(simdat[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')
+
   #eigens (horizontal lines at 1, tipping point between geometric growth and decline,and red line at the mean value)
-  ggplot(melt(sim2test[[3]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red')) +ggtitle('Entire Population, Eigen Values') +xlab('time')+ylab('Dominant Eigen Value')
-  sim2eigens1.plot<-ggplot(melt(sim2test[[1]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
-  sim2eigens2.plot<-ggplot(melt(sim2test[[2]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 2, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
-  multiplot(sim2eigens1.plot,sim2eigens2.plot)
+  sim2eigens1.plot<-ggplot(melt(simdat[[1]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
+  sim2eigens2.plot<-ggplot(melt(simdat[[2]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 2, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
+
   #yield (horizontal lines at the mean value)
-  ggplot(melt(sim2test[[3]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Yield') +xlab('time')+ylab('Yield')
-  sim2Yield1.plot<-ggplot(melt(sim2test[[1]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Yield') +xlab('time')+ylab('Yield')
-  sim2Yield2.plot<-ggplot(melt(sim2test[[2]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Yield') +xlab('time')+ylab('Yield')
-  multiplot(sim2Yield1.plot,sim2Yield2.plot)
+  sim2Yield1.plot<-ggplot(melt(simdat[[1]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Yield') +xlab('time')+ylab('Yield')
+  sim2Yield2.plot<-ggplot(melt(simdat[[2]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Yield') +xlab('time')+ylab('Yield')
+
   #abundance (horizontal line at the mean value)
-  ggplot(melt(sim2test[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
-  sim2pop1.plot<-ggplot(melt(sim2test[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('abundance')
-  sim2pop2.plot<-ggplot(melt(sim2test[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('abundance')
-  multiplot(sim2pop1.plot,sim2pop2.plot)
+  sim2pop1.plot<-ggplot(melt(simdat[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('abundance')
+  sim2pop2.plot<-ggplot(melt(simdat[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('abundance')
+
+  #combined populations
+  plot1<-ggplot(melt(simdat[[3]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red')) +ggtitle('Entire Population, Eigen Values') +xlab('time')+ylab('Dominant Eigen Value')
+  plot2<-ggplot(melt(simdat[[3]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Yield') +xlab('time')+ylab('Yield')
+  plot3<-ggplot(melt(simdat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
+
+  plots<-switch(type,
+                "Radj" = list(sim2Radj1.plot,sim2Radj2.plot),
+                "eigens" = list(sim2eigens1.plot,sim2eigens2.plot),
+                "yield" = list(sim2Yield1.plot,sim2Yield2.plot),
+                "abun" = list(sim2pop1.plot,sim2pop2.plot),
+                "all" = list(plot1,plot2,plot3))
+  multiplot(plotlist=plots)
 }
+# function(input, output) {
+#   output$map <- renderPlot({
+#     data <- switch(input$var, 
+#                    "Percent White" = counties$white,
+#                    "Percent Black" = counties$black,
+#                    "Percent Hispanic" = counties$hispanic,
+#                    "Percent Asian" = counties$asian)
+#     color <- switch(input$var,
+#                     "Percent White" = 'darkgreen',
+#                     "Percent Black" = 'darkblue',
+#                     "Percent Hispanic" = 'red',
+#                     "Percent Asian" = 'purple')
+#     
+#     percent_map(var = data, color = color, legend.title = input$var, max = input$range[2], min = input$range[1])
+#   })
+# }
