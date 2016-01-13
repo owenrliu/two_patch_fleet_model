@@ -88,32 +88,14 @@ shinyUI(navbarPage("Two-Patch Model",
                    ),
                    # Parameter visualization tab, with sidebar to choose population
                    tabPanel("Growth and Mortality",
-                            navlistPanel(
-                              "Choose Population",
-                              "-----",
-                              widths=c(2,10),
-                              tabPanel("Population 1",
-                                       fluidRow(
-                                         column(4,plotOutput("length.1"),offset=1),
-                                         column(4,plotOutput("select.1"),offset=2)
-                                       ),
-                                       fluidRow(
-                                         column(4,plotOutput("surv.1")),
-                                         column(4,plotOutput("fecun.1")),
-                                         column(4,plotOutput("ageweight.1"))
-                                       )
+                            fluidRow(
+                              column(4,plotOutput("length"),offset=1),
+                              column(4,plotOutput("select"),offset=2)
                               ),
-                              tabPanel("Population 2",
-                                       fluidRow(
-                                         column(4,plotOutput("length.2"),offset=1),
-                                         column(4,plotOutput("select.2"),offset=2)
-                                       ),
-                                       fluidRow(
-                                         column(4,plotOutput("surv.2")),
-                                         column(4,plotOutput("fecun.2")),
-                                         column(4,plotOutput("ageweight.2"))
-                                       )
-                              )
+                            fluidRow(
+                              column(4,plotOutput("surv")),
+                              column(4,plotOutput("fecun")),
+                              column(4,plotOutput("ageweight"))
                             )),
                    # Output of simulations, with sidebar choices for which graphs to view
                    tabPanel("Simulation Outputs",

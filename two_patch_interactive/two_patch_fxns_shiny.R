@@ -491,13 +491,21 @@ plottotpop <- function(dat) {
   abun<-ggplot(melt(dat[[3]][['tot']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE) +ggtitle('Entire Population, Abundance') +xlab('Time')+ylab('Abundance')
   multiplot(eigen,yield,abun,layout=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
 }
-plotparams<-function(vec,type) {
-  age.vec<-0:(length(vec)-1)
-  df<-data.frame(testvec=vec,age=age.vec)
-  df_molten<-melt(df,id.vars='age')
+plotparams<-function(vec1,vec2,type) {
+  age.vec<-0:(length(vec1)-1)
+  df1<-data.frame(testvec=vec1,age=age.vec)
+  df1_molten<-melt(df1,id.vars='age',value.name = 'pop1')
+  df2<-data.frame(testvec=vec2,age=age.vec)
+  df2_molten<-melt(df2,id.vars='age',value.name = 'pop2')
+  df<-merge(df1_molten,df2_molten)
   title <- paste0("Age vs. ",type)
   laby <- type
-  ggplot(df_molten) + geom_line(aes(x=age,y=value))+labs(title=title,x="Age",y=laby)
+  
+  ggplot(df,aes(x=age)) + 
+    geom_line(aes(y=pop1,col='Pop 1'))+
+    geom_line(aes(y=pop2,col='Pop 2'))+
+    scale_color_manual('',breaks=c("Pop 1","Pop 2"),values=c("red","blue"))+
+    labs(title=title,x="Age",y=laby)
 }
 two_pop_sim_plots <- function(simdat,type) {
   #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)

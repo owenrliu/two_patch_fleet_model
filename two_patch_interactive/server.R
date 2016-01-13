@@ -19,53 +19,41 @@ shinyServer(function(input, output) {
   simdat <- reactive(do.call(sim.2pops,getParams()))
   
   # Parameter visualization plot outputs
-  # Population 1
-  output$length.1 <- renderPlot({
+  output$length<- renderPlot({
     p=params()
-    plotparams(type='Length',vb.growth(age.vec=(0:p$max.age.1),vb=c(p$Linf.1,p$K.1,p$t0.1)))
+    vec1<-vb.growth(age.vec=(0:p$max.age.1),vb=c(p$Linf.1,p$K.1,p$t0.1))
+    vec2<-vb.growth(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2))
+    plotparams(type='Length',vec1=vec1,vec2=vec2)
   })
-  output$select.1 <- renderPlot({
+  output$select<- renderPlot({
     p=params()
-    plotparams(type='Selectivity',selectivity.at.length(age.vec=0:p$max.age.1,vb=c(p$Linf.1,p$K.1,p$t0.1),L50=p$L50.1,L95=p$L95.1))
+    vec1<-selectivity.at.length(age.vec=0:p$max.age.1,vb=c(p$Linf.1,p$K.1,p$t0.1),L50=p$L50.1,L95=p$L95.1)
+    vec2<-selectivity.at.length(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2),L50=p$L50.2,L95=p$L95.2)
+    plotparams(type='Selectivity',vec1=vec1,vec2=vec2)
   })
-  output$surv.1 <- renderPlot({
+  output$surv <- renderPlot({
     p=params()
-    q.vec<-selectivity.at.length(age.vec=0:p$max.age.1,vb=c(p$Linf.1,p$K.1,p$t0.1),L50=p$L50.1,L95=p$L95.1)
-    plotparams(type='Survival',surv.fxn(fish=p$fish.1,q.vec=q.vec,mort=p$mort.1))
+    q.vec1<-selectivity.at.length(age.vec=0:p$max.age.1,vb=c(p$Linf.1,p$K.1,p$t0.1),L50=p$L50.1,L95=p$L95.1)
+    q.vec2<-selectivity.at.length(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2),L50=p$L50.2,L95=p$L95.2)
+    vec1<-surv.fxn(fish=p$fish.1,q.vec=q.vec1,mort=p$mort.1)
+    vec2<-surv.fxn(fish=p$fish.2,q.vec=q.vec2,mort=p$mort.2)
+    plotparams(type='Survival',vec1=vec1,vec2=vec2)
   })
-  output$fecun.1 <- renderPlot({
+  output$fecun<- renderPlot({
     p=params()
-    plotparams(type='Fecundity',fert(age.vec=0:p$max.age.1, vb=c(p$Linf.1,p$K.1,p$t0.1), repr.age=p$repr.age.1,
-                    fert1=p$fert1.1,fert2=p$fert2.1))
+    vec1<-fert(age.vec=0:p$max.age.1, vb=c(p$Linf.1,p$K.1,p$t0.1), repr.age=p$repr.age.1,
+               fert1=p$fert1.1,fert2=p$fert2.1)
+    vec2<-fert(age.vec=0:p$max.age.2, vb=c(p$Linf.2,p$K.2,p$t0.2), repr.age=p$repr.age.2,
+               fert1=p$fert1.2,fert2=p$fert2.2)
+    plotparams(type='Fecundity',vec1=vec1,vec2=vec2)
   })
-  output$ageweight.1 <- renderPlot({
+  output$ageweight<- renderPlot({
     p=params()
-    plotparams(type='Weight',weight.at.age(vb=c(p$Linf.1,p$K.1,p$t0.1),age.vec=0:p$max.age.1,
-                             lw.a=p$lw.a.1,lw.b=p$lw.b.1))
-  })
-  # Population 2
-  output$length.2 <- renderPlot({
-    p=params()
-    plotparams(type='Length',vb.growth(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2)))
-  })
-  output$select.2 <- renderPlot({
-    p=params()
-    plotparams(type='Selectivity',selectivity.at.length(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2),L50=p$L50.2,L95=p$L95.2))
-  })
-  output$surv.2 <- renderPlot({
-    p=params()
-    q.vec<-selectivity.at.length(age.vec=0:p$max.age.2,vb=c(p$Linf.2,p$K.2,p$t0.2),L50=p$L50.2,L95=p$L95.2)
-    plotparams(type='Survival',surv.fxn(fish=p$fish.2,q.vec=q.vec,mort=p$mort.2))
-  })
-  output$fecun.2 <- renderPlot({
-    p=params()
-    plotparams(type='Fecundity',fert(age.vec=0:p$max.age.2, vb=c(p$Linf.2,p$K.2,p$t0.2), repr.age=p$repr.age.2,
-                    fert1=p$fert1.2,fert2=p$fert2.2))
-  })
-  output$ageweight.2 <- renderPlot({
-    p=params()
-    plotparams(type='Weight',weight.at.age(vb=c(p$Linf.2,p$K.2,p$t0.2),age.vec=0:p$max.age.2,
-                             lw.a=p$lw.a.2,lw.b=p$lw.b.2))
+    vec1<-weight.at.age(vb=c(p$Linf.1,p$K.1,p$t0.1),age.vec=0:p$max.age.1,
+                        lw.a=p$lw.a.1,lw.b=p$lw.b.1)
+    vec2<-weight.at.age(vb=c(p$Linf.2,p$K.2,p$t0.2),age.vec=0:p$max.age.2,
+                        lw.a=p$lw.a.2,lw.b=p$lw.b.2)
+    plotparams(type='Weight',vec1=vec1,vec2=vec2)
   })
   
   # Simulation output plots
@@ -84,4 +72,5 @@ shinyServer(function(input, output) {
   output$totpop <- renderPlot({
     plottotpop(simdat())
   })
+  
 })
