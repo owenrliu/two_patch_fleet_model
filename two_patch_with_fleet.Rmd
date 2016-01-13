@@ -365,6 +365,7 @@ sim.dipop <- function(nyears=200,max.age=14,Linf=52.2,K=0.354,t0 = -0.766, surv=
   a.alpha <- estBetaParams(mu=a.mu,cv=a.cv)[[1]]
   a.beta <- estBetaParams(mu=a.mu,cv=a.cv)[[2]]
   a.rand <- rbeta(n=nyears,shape1=a.alpha,shape2=a.beta)
+  if(a.mu==0) a.rand<-rep(0,nyears)
   
   ## parameters and vector for log-norm-distributed ext (number of external larvae)
   ext.meanlog <- estlnormParams(mean=ext.mean,cv=ext.cv)[[1]]
@@ -396,7 +397,8 @@ sim.dipop <- function(nyears=200,max.age=14,Linf=52.2,K=0.354,t0 = -0.766, surv=
   }
   ## for the last year
   demo.rand <- runif(1,min=0.875,max=1.125) # allows uniform random synchronous variation
-  M <- M.di(max.age=max.age,a=a.rand[nyears], gamma=gamma*demo.rand, fert.vec=fert.vec*demo.rand, p.vec=p.vec*demo.rand)
+  M <- M.di(max.age=max.age,a=a.rand[nyears], gamma=gamma*demo.rand, fert.vec=fert.vec*demo.rand,
+            p.vec=p.vec*demo.rand)
   eigens[nyears] <- eigen(M)[[1]][1] #store the dominant eigen value
   Radj[nyears] <- net.R(fert.vec=fert.vec*demo.rand,p.vec=p.vec*demo.rand)*(gamma*demo.rand)*a.rand[nyears]
   SSB[nyears] <- ssb(w.vec=w.vec,n.vec=d.i.sim[,nyears],mature.vec=mature.vec)
@@ -548,6 +550,7 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   a.alpha.1 <- estBetaParams(mu=a.mu.1,cv=a.cv.1)[[1]]
   a.beta.1 <- estBetaParams(mu=a.mu.1,cv=a.cv.1)[[2]]
   a.rand.1 <- rbeta(n=nyears,shape1=a.alpha.1,shape2=a.beta.1)
+  if(a.mu.1==0) a.rand.1<-rep(0,nyears)
   
   ### Second population
   ## age vector
@@ -583,6 +586,7 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   a.alpha.2 <- estBetaParams(mu=a.mu.2,cv=a.cv.2)[[1]]
   a.beta.2 <- estBetaParams(mu=a.mu.2,cv=a.cv.2)[[2]]
   a.rand.2 <- rbeta(n=nyears,shape1=a.alpha.2,shape2=a.beta.2)
+  if(a.mu.2==0) a.rand.2<-rep(0,nyears)
   
     ## Random, beta-distributed larval and adult connectivity, pop2 to pop1, based on mean larval connectivity larvala.mu.1, and mean adult connectivity adulta.mu.1
   larvala.alpha.12 <- estBetaParams(mu=larvala.mu.1,cv=larvala.cv.1)[[1]]
@@ -620,7 +624,7 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   simtot.2 <- numeric() # total population
   Ninit.2 <- rep(250,15)*stableage.2 # starting abundance (subpop 2)
   sim.2[,1] <- Ninit.2
-  simtot.2[1] <- sum(Ninit.1)
+  simtot.2[1] <- sum(Ninit.2)
   eigens.2 <- numeric() # for holding eigenvalues
   Radj.2 <- numeric() # for holding "adjusted" R values (R*gamma*a in each year)
   SSB.2 <- numeric() # for holding value of SSB in each year
@@ -638,16 +642,20 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   ## Run the simulation
   for (i in 1:(nyears-1)) {
     ## Movement matrices Q12 (transitions and reproduction of individuals the move from patch 2 to patch 1) and Q21       (transitions and reproduction of individuals the move from patch 1 to patch 2). Remember, the fertility vector        corresponds to the outside population, and all other survival and recruitment-rate terms correspond to the local      population.
-    Q.12 <- Q.fxn(max.age=max.age,larvala=larvala.rand.12[i], adulta=adulta.rand.12[i], gamma=gamma.1,fert.vec=fert.vec.2,p.vec=p.vec.1)
-    Q.21 <- Q.fxn(max.age=max.age,larvala=larvala.rand.21[i], adulta=adulta.rand.21[i], gamma=gamma.2,fert.vec=fert.vec.1,p.vec=p.vec.2)
+    Q.12 <- Q.fxn(max.age=max.age,larvala=larvala.rand.12[i], adulta=adulta.rand.12[i],
+                  gamma=gamma.1,fert.vec=fert.vec.2,p.vec=p.vec.1)
+    Q.21 <- Q.fxn(max.age=max.age,larvala=larvala.rand.21[i], adulta=adulta.rand.21[i],
+                  gamma=gamma.2,fert.vec=fert.vec.1,p.vec=p.vec.2)
     
     ## Local transition matrices M1 and M2
     demo.rand <- runif(1,min=0.875,max=1.125) # allows uniform random synchronous variation in demographic rates
-    M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
-    M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
+    M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand,
+                p.vec=p.vec.1*demo.rand)
+    M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand,
+                p.vec=p.vec.2*demo.rand)
     
     #Projection matrix A, including M and Q
-    A <- rbind(cbind(M.1,Q.12),cbind(M.2,Q.21))
+    A <- rbind(cbind(M.1,Q.12),cbind(Q.21,M.2))
     
     ## update all the variables we're tracking
     
@@ -668,8 +676,8 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
     # pop 2
     eigens.2[i] <- eigen(M.2)[[1]][1]
     Radj.2[i] <- net.R(fert.vec=fert.vec.2*demo.rand,p.vec=p.vec.2*demo.rand)*(gamma.2*demo.rand)*a.rand.2[i]
-    sim.2[,i+1] <- N.vec[(max.age+2):(2*(max.age+1))]
-    simtot.2[i+1] <- sum(N.vec[1:(max.age+1)])
+    sim.2[,i+1] <- N.vec[(max.age+2):length(N.vec)]
+    simtot.2[i+1] <- sum(N.vec[(max.age+2):length(N.vec)])
     SSB.2[i] <- ssb(w.vec=w.vec.2,n.vec=sim.2[,i],mature.vec=mature.vec.2)
     Yield.2[i] <- yield(fish=fish.2,q.vec=q.vec.2,mort=mort.2,w.vec=w.vec.2,n.vec=sim.2[,i])
     
@@ -680,11 +688,13 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
   }
   ## FOR THE FINAL YEAR
   demo.rand <- runif(1,min=0.875,max=1.125) # allows uniform random synchronous variation in demographic rates
-    M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
-    M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
+    M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand,
+                p.vec=p.vec.1*demo.rand)
+    M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand,
+                p.vec=p.vec.2*demo.rand)
     
   #Projection matrix A, including M and Q
-  A <- rbind(cbind(M.1,Q.12),cbind(M.2,Q.21))
+  A <- rbind(cbind(M.1,Q.12),cbind(Q.21,M.2))
   
   ## update all the variables we're tracking
   
@@ -710,13 +720,13 @@ sim.2pops <- function(nyears=200,max.age=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.766,
 ## Returns a list of 3 lists of the simulation, including population (every age class), total population summed over age classes, proportional population in each age class, eigenvalues of each year's matrix, and Reproductive Value for the average individual each year, adjusted for settler survival (gamma) and self-recruitment rate a.  One list for each population separately, and one list for the entire population.
   simlist.1 <- list(pop=sim.1,tot=simtot.1,props=apply(sim.1,
             MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.1),
-            Radj=Radj.1,SSB=SSB.1,Yield=Yield.1)
+            Radj=Radj.1,SSB=SSB.1,Yield=Yield.1,randa=a.rand.1)
   simlist.2 <- list(pop=sim.2,tot=simtot.2,props=apply(sim.2,
             MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.2),
-            Radj=Radj.2,SSB=SSB.2,Yield=Yield.2)
+            Radj=Radj.2,SSB=SSB.2,Yield=Yield.2,randa=a.rand.2)
   simlist.all <- list(pop=sim.all,tot=simtot.all,props=apply(sim.all,
             MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.all),
-            SSB=SSB.all,Yield=Yield.all)
+            SSB=SSB.all,Yield=Yield.all,larvala1=larvala.rand.12,larvala2=larvala.rand.21)
     
   return(list(pop1=simlist.1,pop2=simlist.2,total=simlist.all))
 }
@@ -727,7 +737,7 @@ Let's run the simulation and make sure it works.  This chunk can be run multiple
 
 ```{r two pop simulation}
 ptm <- proc.time() # for timing the simulation
-sim2test <- sim.2pops(K.1=0.5,fish.1=0.1,fish.2=0.05)
+sim2test <- sim.2pops()
 #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)
 sim2Radj1.plot<-ggplot(melt(sim2test[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
 sim2Radj2.plot<-ggplot(melt(sim2test[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')

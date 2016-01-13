@@ -7,7 +7,7 @@
 library(RColorBrewer)
 library(ggplot2)
 library(reshape2)
-library(popbio)
+library(ggthemes)
 
 #### Multiplot function ####
 # Multiple plot function
@@ -272,22 +272,23 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   p.vec.1 <- surv.fxn(fish=fish.1, q.vec=q.vec.1,mort=mort.1)
   
   ## maturity-at-age
-  mature.vec.1 <- c(rep(0,repr.age.1-1),rep(1,max.age+2-repr.age.1))
+  mature.vec.1 <- c(rep(0,repr.age.1-1),rep(1,max.age.1+2-repr.age.1))
   
   ## weight-at-age
   w.vec.1 <- weight.at.age(age.vec=age.vec,vb=vb.1,lw.a=lw.a.1,lw.b=lw.b.1)
   
   ## allows external larvae to affect the matrix
-  e.vec <- c(1,rep(0,(max.age)))
+  e.vec <- c(1,rep(0,(max.age.1)))
   
   ## stable age distribution (for seeding simulation)
-  stableage.1 <- Re(eigen(M.di(max.age=max.age,a=a.mu.1,gamma=gamma.1,fert.vec=fert.vec.1,p.vec=p.vec.1))$vector)[,1]
+  stableage.1 <- Re(eigen(M.di(max.age=max.age.1,a=a.mu.1,gamma=gamma.1,fert.vec=fert.vec.1,p.vec=p.vec.1))$vector)[,1]
   stableage.1 <- stableage.1/sum(stableage.1)
   
   ## parameters and vector for beta-distributed a (self-recruitment rate)
   a.alpha.1 <- estBetaParams(mu=a.mu.1,cv=a.cv.1)[[1]]
   a.beta.1 <- estBetaParams(mu=a.mu.1,cv=a.cv.1)[[2]]
   a.rand.1 <- rbeta(n=nyears,shape1=a.alpha.1,shape2=a.beta.1)
+  if(a.mu.1==0) a.rand.1<-rep(0,nyears)
   
   ### Second population
   ## age vector
@@ -307,22 +308,23 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   p.vec.2 <- surv.fxn(fish=fish.2, q.vec=q.vec.2,mort=mort.2)
   
   ## maturity-at-age
-  mature.vec.2 <- c(rep(0,repr.age.2-1),rep(1,max.age+2-repr.age.2))
+  mature.vec.2 <- c(rep(0,repr.age.2-1),rep(1,max.age.2+2-repr.age.2))
   
   ## weight-at-age
   w.vec.2 <- weight.at.age(age.vec=age.vec,vb=vb.2,lw.a=lw.a.2,lw.b=lw.b.2)
   
   ## allows external larvae to affect the matrix
-  e.vec <- c(1,rep(0,(max.age)))
+  e.vec <- c(1,rep(0,(max.age.2)))
   
   ## stable age distribution (for seeding simulation)
-  stableage.2 <- Re(eigen(M.di(max.age=max.age,a=a.mu.2,gamma=gamma.2,fert.vec=fert.vec.2,p.vec=p.vec.2))$vector)[,1]
+  stableage.2 <- Re(eigen(M.di(max.age=max.age.2,a=a.mu.2,gamma=gamma.2,fert.vec=fert.vec.2,p.vec=p.vec.2))$vector)[,1]
   stableage.2 <- stableage.2/sum(stableage.2)
   
   ## parameters and vector for beta-distributed a (self-recruitment rate)
   a.alpha.2 <- estBetaParams(mu=a.mu.2,cv=a.cv.2)[[1]]
   a.beta.2 <- estBetaParams(mu=a.mu.2,cv=a.cv.2)[[2]]
   a.rand.2 <- rbeta(n=nyears,shape1=a.alpha.2,shape2=a.beta.2)
+  if(a.mu.2==0) a.rand.2<-rep(0,nyears)
   
   ## Random, beta-distributed larval and adult connectivity, pop2 to pop1, based on mean larval connectivity larvala.mu.1, and mean adult connectivity adulta.mu.1
   larvala.alpha.12 <- estBetaParams(mu=larvala.mu.1,cv=larvala.cv.1)[[1]]
@@ -345,9 +347,9 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   if(adulta.mu.2==0) adulta.rand.21<-rep(0,nyears)
   
   ## the simulation output holders (pop 1)
-  sim.1 <- matrix(nrow=(max.age+1), ncol=nyears)
+  sim.1 <- matrix(nrow=(max.age.1+1), ncol=nyears)
   simtot.1 <- numeric() # total population
-  Ninit.1 <- rep(250,15)*stableage.1 # starting abundance (subpop 1)
+  Ninit.1 <- rep(250,(max.age.1+1))*stableage.1 # starting abundance (subpop 1)
   sim.1[,1] <- Ninit.1
   simtot.1[1] <- sum(Ninit.1)
   eigens.1 <- numeric() # for holding eigenvalues
@@ -356,18 +358,18 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   Yield.1 <- numeric() #for holding value of yield in each year
   
   ## the simulation output holders (pop 2)
-  sim.2 <- matrix(nrow=(max.age+1), ncol=nyears)
+  sim.2 <- matrix(nrow=(max.age.2+1), ncol=nyears)
   simtot.2 <- numeric() # total population
-  Ninit.2 <- rep(250,15)*stableage.2 # starting abundance (subpop 2)
+  Ninit.2 <- rep(250,(max.age.2+1))*stableage.2 # starting abundance (subpop 2)
   sim.2[,1] <- Ninit.2
-  simtot.2[1] <- sum(Ninit.1)
+  simtot.2[1] <- sum(Ninit.2)
   eigens.2 <- numeric() # for holding eigenvalues
   Radj.2 <- numeric() # for holding "adjusted" R values (R*gamma*a in each year)
   SSB.2 <- numeric() # for holding value of SSB in each year
   Yield.2 <- numeric() #for holding value of yield in each year
   
   ## the simulation output holders (total pop)
-  sim.all <- matrix(nrow=2*(max.age+1), ncol=nyears)
+  sim.all <- matrix(nrow=(max.age.1+max.age.2+2), ncol=nyears)
   simtot.all <- numeric() # total population
   sim.all[,1] <- c(Ninit.1,Ninit.2)
   simtot.all[1] <- sum(Ninit.1,Ninit.2)
@@ -377,17 +379,20 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   
   ## Run the simulation
   for (i in 1:(nyears-1)) {
-    ## Movement matrices Q12 (transitions and reproduction of individuals the move from patch 2 to patch 1) and Q21       (transitions and reproduction of individuals the move from patch 1 to patch 2). Remember, the fertility vector        corresponds to the outside population, and all other survival and recruitment-rate terms correspond to the local      population.
-    Q.12 <- Q.fxn(max.age=max.age,larvala=larvala.rand.12[i], adulta=adulta.rand.12[i], gamma=gamma.1,fert.vec=fert.vec.2,p.vec=p.vec.1)
-    Q.21 <- Q.fxn(max.age=max.age,larvala=larvala.rand.21[i], adulta=adulta.rand.21[i], gamma=gamma.2,fert.vec=fert.vec.1,p.vec=p.vec.2)
+    ## Movement matrices Q12 (transitions and reproduction of individuals the move from patch 2 to patch 1) and Q21
+    ## (transitions and reproduction of individuals the move from patch 1 to patch 2). Remember, the fertility vector
+    ## corresponds to the outside population, and all other survival and recruitment-rate terms correspond to the 
+    ## local population.
+    Q.12 <- Q.fxn(max.age=max.age.1,larvala=larvala.rand.12[i], adulta=adulta.rand.12[i], gamma=gamma.1,fert.vec=fert.vec.2,p.vec=p.vec.1)
+    Q.21 <- Q.fxn(max.age=max.age.2,larvala=larvala.rand.21[i], adulta=adulta.rand.21[i], gamma=gamma.2,fert.vec=fert.vec.1,p.vec=p.vec.2)
     
     ## Local transition matrices M1 and M2
     demo.rand <- runif(1,min=0.875,max=1.125) # allows uniform random synchronous variation in demographic rates
-    M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
-    M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
+    M.1 <- M.di(max.age=max.age.1,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
+    M.2 <- M.di(max.age=max.age.2,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
     
     #Projection matrix A, including M and Q
-    A <- rbind(cbind(M.1,Q.12),cbind(M.2,Q.21))
+    A <- rbind(cbind(M.1,Q.12),cbind(Q.21,M.2))
     
     ## update all the variables we're tracking
     
@@ -399,17 +404,17 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
     
     # pop 1
     eigens.1[i] <- eigen(M.1)[[1]][1]
-    Radj.1[i] <- net.R(fert.vec=fert.vec.1*demo.rand,p.vec=p.vec.1*demo.rand,max.age=max.age)*(gamma.1*demo.rand)*a.rand.1[i]
-    sim.1[,i+1] <- N.vec[1:(max.age+1)]
-    simtot.1[i+1] <- sum(N.vec[1:(max.age+1)])
+    Radj.1[i] <- net.R(fert.vec=fert.vec.1*demo.rand,p.vec=p.vec.1*demo.rand,max.age=max.age.1)*(gamma.1*demo.rand)*a.rand.1[i]
+    sim.1[,i+1] <- N.vec[1:(max.age.1+1)]
+    simtot.1[i+1] <- sum(N.vec[1:(max.age.1+1)])
     SSB.1[i] <- ssb(w.vec=w.vec.1,n.vec=sim.1[,i],mature.vec=mature.vec.1)
     Yield.1[i] <- yield(fish=fish.1,q.vec=q.vec.1,mort=mort.1,w.vec=w.vec.1,n.vec=sim.1[,i])
     
     # pop 2
     eigens.2[i] <- eigen(M.2)[[1]][1]
-    Radj.2[i] <- net.R(fert.vec=fert.vec.2*demo.rand,p.vec=p.vec.2*demo.rand,max.age=max.age)*(gamma.2*demo.rand)*a.rand.2[i]
-    sim.2[,i+1] <- N.vec[(max.age+2):(2*(max.age+1))]
-    simtot.2[i+1] <- sum(N.vec[1:(max.age+1)])
+    Radj.2[i] <- net.R(fert.vec=fert.vec.2*demo.rand,p.vec=p.vec.2*demo.rand,max.age=max.age.2)*(gamma.2*demo.rand)*a.rand.2[i]
+    sim.2[,i+1] <- N.vec[(max.age.1+2):length(N.vec)]
+    simtot.2[i+1] <- sum(N.vec[(max.age.1+2):length(N.vec)])
     SSB.2[i] <- ssb(w.vec=w.vec.2,n.vec=sim.2[,i],mature.vec=mature.vec.2)
     Yield.2[i] <- yield(fish=fish.2,q.vec=q.vec.2,mort=mort.2,w.vec=w.vec.2,n.vec=sim.2[,i])
     
@@ -420,11 +425,11 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   }
   ## FOR THE FINAL YEAR
   demo.rand <- runif(1,min=0.875,max=1.125) # allows uniform random synchronous variation in demographic rates
-  M.1 <- M.di(max.age=max.age,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
-  M.2 <- M.di(max.age=max.age,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
+  M.1 <- M.di(max.age=max.age.1,a=a.rand.1[i], gamma=gamma.1*demo.rand, fert.vec=fert.vec.1*demo.rand, p.vec=p.vec.1*demo.rand)
+  M.2 <- M.di(max.age=max.age.2,a=a.rand.2[i], gamma=gamma.2*demo.rand, fert.vec=fert.vec.2*demo.rand, p.vec=p.vec.2*demo.rand)
   
   #Projection matrix A, including M and Q
-  A <- rbind(cbind(M.1,Q.12),cbind(M.2,Q.21))
+  A <- rbind(cbind(M.1,Q.12),cbind(Q.21,M.2))
   
   ## update all the variables we're tracking
   
@@ -433,13 +438,13 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   
   # pop 1
   eigens.1[nyears] <- eigen(M.1)[[1]][1]
-  Radj.1[nyears] <- net.R(fert.vec=fert.vec.1*demo.rand,p.vec=p.vec.1*demo.rand,max.age=max.age)*(gamma.1*demo.rand)*a.rand.1[nyears]
+  Radj.1[nyears] <- net.R(fert.vec=fert.vec.1*demo.rand,p.vec=p.vec.1*demo.rand,max.age=max.age.1)*(gamma.1*demo.rand)*a.rand.1[nyears]
   SSB.1[nyears] <- ssb(w.vec=w.vec.1,n.vec=sim.1[,nyears],mature.vec=mature.vec.1)
   Yield.1[nyears] <- yield(fish=fish.1,q.vec=q.vec.1,mort=mort.1,w.vec=w.vec.1,n.vec=sim.1[,nyears])
   
   # pop 2
   eigens.2[nyears] <- eigen(M.2)[[1]][1]
-  Radj.2[nyears] <- net.R(fert.vec=fert.vec.2*demo.rand,p.vec=p.vec.2*demo.rand,max.age=max.age)*(gamma.2*demo.rand)*a.rand.2[nyears]
+  Radj.2[nyears] <- net.R(fert.vec=fert.vec.2*demo.rand,p.vec=p.vec.2*demo.rand,max.age=max.age.2)*(gamma.2*demo.rand)*a.rand.2[nyears]
   SSB.2[nyears] <- ssb(w.vec=w.vec.2,n.vec=sim.2[,nyears],mature.vec=mature.vec.2)
   Yield.2[nyears] <- yield(fish=fish.2,q.vec=q.vec.2,mort=mort.2,w.vec=w.vec.2,n.vec=sim.2[,nyears])
   
@@ -448,15 +453,12 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
   Yield.all[nyears] <- sum(Yield.1[nyears],Yield.2[nyears])
   
   ## Returns a list of 3 lists of the simulation, including population (every age class), total population summed over age classes, proportional population in each age class, eigenvalues of each year's matrix, and Reproductive Value for the average individual each year, adjusted for settler survival (gamma) and self-recruitment rate a.  One list for each population separately, and one list for the entire population.
-  simlist.1 <- list(pop=sim.1,tot=simtot.1,props=apply(sim.1,
-                                                       MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.1),
+  simlist.1 <- list(pop=sim.1,tot=simtot.1,props=apply(sim.1,MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.1),
                     Radj=Radj.1,SSB=SSB.1,Yield=Yield.1)
-  simlist.2 <- list(pop=sim.2,tot=simtot.2,props=apply(sim.2,
-                                                       MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.2),
+  simlist.2 <- list(pop=sim.2,tot=simtot.2,props=apply(sim.2, MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.2),
                     Radj=Radj.2,SSB=SSB.2,Yield=Yield.2)
-  simlist.all <- list(pop=sim.all,tot=simtot.all,props=apply(sim.all,
-                                                             MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.all),
-                      SSB=SSB.all,Yield=Yield.all)
+  simlist.all <- list(pop=sim.all,tot=simtot.all,props=apply(sim.all, MARGIN=2,FUN=function(x) x/sum(x)), eigens=Re(eigens.all),
+                      SSB=SSB.all,Yield=Yield.all, A = A)
   
   return(list(pop1=simlist.1,pop2=simlist.2,total=simlist.all))
 }
@@ -464,29 +466,29 @@ sim.2pops <- function(nyears=200,max.age.1=14,Linf.1=52.2,K.1=0.354,t0.1 = -0.76
 #### Plotting the outputs from the simulation ####
 ## Requires a few different plot layouts, etc. to fit the form of the app ##
 plotRadj <- function(dat) {
-  Radj1.plot<-ggplot(melt(dat[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('R')
-  Radj2.plot<-ggplot(melt(dat[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+ggtitle('Population 2, Net Reproductive Value') +xlab('time')+ylab('R')
+  Radj1.plot<-ggplot(melt(dat[[1]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +theme_economist_white()+geom_hline(aes(yintercept=1))+guides(color=FALSE)+ggtitle('Population 1, Net Reproductive Value') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('Time')+ylab('Net Reproductive Rate')
+  Radj2.plot<-ggplot(melt(dat[[2]][['Radj']]),aes(x=1:200,y=value)) +geom_line() +theme_economist_white()+geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+guides(color=FALSE)+ggtitle('Population 2, Net Reproductive Value') +xlab('Time')+ylab('Net Reproductive Rate')
   multiplot(Radj1.plot,Radj2.plot)
 }
 ploteigens <- function(dat) {
-  eigens1.plot<-ggplot(melt(dat[[1]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
-  eigens2.plot<-ggplot(melt(dat[[2]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 2, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +xlab('time')+ylab('Dominant Eigen Value')
+  eigens1.plot<-ggplot(melt(dat[[1]][['eigens']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 1, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +guides(color=FALSE)+xlab('Time')+ylab('Dominant Eigen Value')
+  eigens2.plot<-ggplot(melt(dat[[2]][['eigens']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=1))+ggtitle('Population 2, Eigen Values') +geom_hline(aes(yintercept=mean(value),color='red')) +guides(color=FALSE)+xlab('Time')+ylab('Dominant Eigen Value')
   multiplot(eigens1.plot,eigens2.plot)
 }
 plotyield <-function(dat) {
-  Yield1.plot<-ggplot(melt(dat[[1]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Yield') +xlab('time')+ylab('Yield')
-  Yield2.plot<-ggplot(melt(dat[[2]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Yield') +xlab('time')+ylab('Yield')
+  Yield1.plot<-ggplot(melt(dat[[1]][['Yield']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE)+ggtitle('Population 1, Yield') +xlab('Time')+ylab('Yield')
+  Yield2.plot<-ggplot(melt(dat[[2]][['Yield']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE)+ggtitle('Population 2, Yield') +xlab('Time')+ylab('Yield')
   multiplot(Yield1.plot,Yield2.plot)
 }
 plotabun <- function(dat) {
-  pop1.plot<-ggplot(melt(dat[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('abundance')
-  pop2.plot<-ggplot(melt(dat[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('abundance')
+  pop1.plot<-ggplot(melt(dat[[1]][['tot']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE)+ggtitle('Population 1, Abundance') +xlab('Time')+ylab('Abundance')
+  pop2.plot<-ggplot(melt(dat[[2]][['tot']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE)+ggtitle('Population 2, Abundance') +xlab('Time')+ylab('Abundance')
   multiplot(pop1.plot,pop2.plot)
 }
 plottotpop <- function(dat) {
-  eigen<-ggplot(melt(dat[[3]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red')) +ggtitle('Entire Population, Eigen Values') +xlab('time')+ylab('Dominant Eigen Value')
-  yield<-ggplot(melt(dat[[3]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Yield') +xlab('time')+ylab('Yield')
-  abun<-ggplot(melt(dat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
+  eigen<-ggplot(melt(dat[[3]][['eigens']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red'))+guides(color=FALSE) +ggtitle('Entire Population, Eigen Values') +xlab('Time')+ylab('Dominant Eigen Value')
+  yield<-ggplot(melt(dat[[3]][['Yield']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE) +ggtitle('Entire Population, Yield') +xlab('Time')+ylab('Yield')
+  abun<-ggplot(melt(dat[[3]][['tot']]),aes(x=1:200,y=value)) +theme_economist_white()+geom_line() +geom_hline(aes(yintercept=mean(value)))+guides(color=FALSE) +ggtitle('Entire Population, Abundance') +xlab('Time')+ylab('Abundance')
   multiplot(eigen,yield,abun,layout=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
 }
 plotparams<-function(vec,type) {
@@ -495,7 +497,7 @@ plotparams<-function(vec,type) {
   df_molten<-melt(df,id.vars='age')
   title <- paste0("Age vs. ",type)
   laby <- type
-  ggplot(df_molten) + geom_line(aes(x=age,y=value)) + labs(title=title,x="Age",y=laby)
+  ggplot(df_molten) + geom_line(aes(x=age,y=value))+labs(title=title,x="Age",y=laby)
 }
 two_pop_sim_plots <- function(simdat,type) {
   #Radjs (horizontal lines at 1, tipping point betewen geometric growth and decline, and red line at the mean value)
@@ -511,13 +513,13 @@ two_pop_sim_plots <- function(simdat,type) {
   sim2Yield2.plot<-ggplot(melt(simdat[[2]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Yield') +xlab('time')+ylab('Yield')
 
   #abundance (horizontal line at the mean value)
-  sim2pop1.plot<-ggplot(melt(simdat[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('abundance')
-  sim2pop2.plot<-ggplot(melt(simdat[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('abundance')
+  sim2pop1.plot<-ggplot(melt(simdat[[1]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 1, Abundance') +xlab('time')+ylab('Abundance')
+  sim2pop2.plot<-ggplot(melt(simdat[[2]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value)))+ggtitle('Population 2, Abundance') +xlab('time')+ylab('Abundance')
 
   #combined populations
   plot1<-ggplot(melt(simdat[[3]][['eigens']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=1))+geom_hline(aes(yintercept=mean(value),color='red')) +ggtitle('Entire Population, Eigen Values') +xlab('time')+ylab('Dominant Eigen Value')
   plot2<-ggplot(melt(simdat[[3]][['Yield']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Yield') +xlab('time')+ylab('Yield')
-  plot3<-ggplot(melt(simdat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('abundance')
+  plot3<-ggplot(melt(simdat[[3]][['tot']]),aes(x=1:200,y=value)) +geom_line() +geom_hline(aes(yintercept=mean(value))) +ggtitle('Entire Population, Abundance') +xlab('time')+ylab('Abundance')
 
   plots<-switch(type,
                 "Radj" = list(sim2Radj1.plot,sim2Radj2.plot),
@@ -527,19 +529,3 @@ two_pop_sim_plots <- function(simdat,type) {
                 "all" = list(plot1,plot2,plot3))
   multiplot(plotlist=plots)
 }
-# function(input, output) {
-#   output$map <- renderPlot({
-#     data <- switch(input$var, 
-#                    "Percent White" = counties$white,
-#                    "Percent Black" = counties$black,
-#                    "Percent Hispanic" = counties$hispanic,
-#                    "Percent Asian" = counties$asian)
-#     color <- switch(input$var,
-#                     "Percent White" = 'darkgreen',
-#                     "Percent Black" = 'darkblue',
-#                     "Percent Hispanic" = 'red',
-#                     "Percent Asian" = 'purple')
-#     
-#     percent_map(var = data, color = color, legend.title = input$var, max = input$range[2], min = input$range[1])
-#   })
-# }
